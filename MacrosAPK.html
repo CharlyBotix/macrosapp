@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f1117">
@@ -71,14 +71,14 @@ html{font-size:160%;}html,body{height:100%;}body{background:var(--bg);color:var(
 .empty-state-icon{font-size:48px;margin-bottom:14px;}.empty-state-title{font-size:16px;font-weight:700;color:var(--text2);margin-bottom:6px;}.empty-state-sub{font-size:13px;line-height:1.7;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:480px;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.34,1.1,0.64,1);max-height:94dvh;display:flex;flex-direction:column;}
+.modal{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:480px;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.34,1.1,0.64,1);max-height:92dvh;display:flex;flex-direction:column;}
 .modal-overlay.open .modal{transform:translateY(0);}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
 .modal-header{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;}
 .modal-title{font-size:18px;font-weight:800;}
 .modal-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;}
 .modal-close:active{background:var(--surface3);}
-.modal-body{padding:18px 20px 32px;overflow-y:auto;flex:1;}
+.modal-body{padding:18px 20px 32px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;}
 .kcal-preview{background:var(--accent-dim);border:1px solid rgba(110,231,183,0.2);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
 .kcal-preview-label{font-size:11px;color:var(--text2);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.5px;}
 .kcal-formula{font-size:10px;color:var(--muted);font-family:var(--font-mono);margin-top:4px;}
@@ -1483,20 +1483,27 @@ function renderLogPicker(){
 function logSelectFood(id){
   const f=allFoods.find(x=>x.id===id); if(!f) return;
   const kcal=f.kcal||calcKcal(f.protein||0,f.carbs||0,f.fiber||0,f.fat||0);
-  logSelectedItem={type:'food',id,name:f.name,per100k:kcal,per100p:f.protein||0,per100c:f.carbs||0,per100fi:f.fiber||0,per100f:f.fat||0};
+  logSelectedItem={type:'food',id,name:f.name,per100k:kcal,per100p:f.protein||0,per100c:f.carbs||0,per100fi:f.fiber||0,per100f:f.fat||0,serving:f.serving||null,unit:f.unit||'g'};
   showLogGramsStep();
 }
 function logSelectRecipe(id){
   const r=allRecipes.find(x=>x.id===id); if(!r) return;
   const t=recipeCalcTotals(r.ingredients||[]);
-  logSelectedItem={type:'recipe',id,name:r.name,per100k:t.k,per100p:t.p,per100c:t.c,per100fi:t.fi,per100f:t.f};
+  logSelectedItem={type:'recipe',id,name:r.name,per100k:t.k,per100p:t.p,per100c:t.c,per100fi:t.fi,per100f:t.f,serving:null,unit:'g'};
   showLogGramsStep();
 }
 function showLogGramsStep(){
   document.getElementById('logStepPick').style.display='none';
   document.getElementById('logStepGrams').style.display='block';
-  document.getElementById('logSelectedCard').innerHTML=`<div class="log-selected-name">${esc(logSelectedItem.name)}</div><div class="log-selected-meta">${Math.round(logSelectedItem.per100k)} kcal · ${Math.round(logSelectedItem.per100p)}g P · ${Math.round(logSelectedItem.per100c)}g C · ${Math.round(logSelectedItem.per100fi)}g Fi · ${Math.round(logSelectedItem.per100f)}g F — per 100g</div>`;
-  const gi=document.getElementById('logGrams'); gi.value='100'; updateLogPreview();
+  const unit=logSelectedItem.unit||'g';
+  const defaultGrams=logSelectedItem.serving||100;
+  document.getElementById('logSelectedCard').innerHTML=`<div class="log-selected-name">${esc(logSelectedItem.name)}</div><div class="log-selected-meta">${Math.round(logSelectedItem.per100k)} kcal · ${Math.round(logSelectedItem.per100p)}g P · ${Math.round(logSelectedItem.per100c)}g C · ${Math.round(logSelectedItem.per100fi)}g Fi · ${Math.round(logSelectedItem.per100f)}g F — per 100${unit}</div>`;
+  // Update quantity label to show correct unit
+  const label=document.querySelector('#logStepGrams .form-label');
+  if(label) label.textContent=`Quantity (${unit})`;
+  const gi=document.getElementById('logGrams');
+  gi.value=defaultGrams;
+  updateLogPreview();
   setTimeout(()=>gi.focus(),100);
 }
 function logBackToPick(){document.getElementById('logStepPick').style.display='block';document.getElementById('logStepGrams').style.display='none';document.getElementById('logStepQuick').style.display='none';}
@@ -2467,6 +2474,13 @@ async function init(){
   // Run on load and after any resize
   window.addEventListener('load', applyStatusBarInset);
   window.addEventListener('resize', applyStatusBarInset);
+  // Scroll focused input into view when keyboard opens
+  window.visualViewport?.addEventListener('resize', () => {
+    const el = document.activeElement;
+    if(el && (el.tagName==='INPUT'||el.tagName==='TEXTAREA')){
+      setTimeout(()=>el.scrollIntoView({block:'center',behavior:'smooth'}), 100);
+    }
+  });
   setTimeout(applyStatusBarInset, 300);
   await initDB();
   allFoods=await dbAll('foods');
