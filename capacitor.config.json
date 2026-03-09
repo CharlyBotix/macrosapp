@@ -1,0 +1,16 @@
+{
+  "appId": "com.charlybotix.macrosapp",
+  "appName": "macros.",
+  "webDir": "www",
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#00000000"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#6EE7B7"
+    }
+  }
+}

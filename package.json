@@ -1,0 +1,16 @@
+{
+  "name": "macrosapp",
+  "version": "1.0.0",
+  "description": "Macro tracking app",
+  "main": "index.js",
+  "scripts": {
+    "build": "bash build.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/local-notifications": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0"
+  }
+}

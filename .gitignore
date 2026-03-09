@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Android build outputs & local config
+android/app/build/
+android/.gradle/
+android/local.properties
+
+# Android SDK (installed in Codespace, not committed)
+android-sdk/
+
+# Generated web assets
+www/
+
+# Compiled APKs
+*.apk
+*.aab
+
+# Capacitor cache
+.capacitor/
+
+# System
+.DS_Store
+*.log
+Thumbs.db

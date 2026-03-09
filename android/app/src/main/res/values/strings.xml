@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">macros.</string>
+    <string name="title_activity_main">macros.</string>
+    <string name="package_name">com.charlybotix.macrosapp</string>
+    <string name="custom_url_scheme">com.charlybotix.macrosapp</string>
+</resources>
