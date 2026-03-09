@@ -15,7 +15,7 @@
 ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:transparent;border-radius:4px;}::-webkit-scrollbar-button{display:none;}
 .main:hover::-webkit-scrollbar-thumb,.modal-body:hover::-webkit-scrollbar-thumb,.ing-picker-list:hover::-webkit-scrollbar-thumb{background:var(--border2);}
 *{scrollbar-width:thin;scrollbar-color:transparent transparent;}.main:hover,.modal-body:hover{scrollbar-color:var(--border2) transparent;}
-html{font-size:160%;}html,body{height:100%;}body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;display:flex;flex-direction:column;height:100dvh;overflow:hidden;}
+html{font-size:160%;}html,body{height:100%;}body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;display:flex;flex-direction:column;height:100dvh;overflow:hidden;zoom:1.08;}
 :root{
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -25,11 +25,11 @@ html{font-size:160%;}html,body{height:100%;}body{background:var(--bg);color:var(
 .header-title{font-size:24px;font-weight:800;letter-spacing:-0.5px;color:var(--accent);}
 .header-backup-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;align-items:center;border-radius:8px;transition:color 0.15s;}
 .header-backup-btn:active{color:var(--accent);}
-.nav{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.nav{display:flex;border-top:1px solid var(--border);flex-shrink:0;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px);}
 .nav-btn{flex:1;padding:13px 8px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;cursor:pointer;transition:color 0.2s;position:relative;}
 .nav-btn.active{color:var(--accent);}
-.nav-btn.active::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--accent);border-radius:2px 2px 0 0;}
-.main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.nav-btn.active::after{content:'';position:absolute;top:0;left:10%;right:10%;height:2px;background:var(--accent);border-radius:0 0 2px 2px;}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));}
 .page{display:none;padding:16px 16px 80px;}.page.active{display:block;}
 .foods-toolbar{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
 .search-wrap{flex:1;position:relative;}
@@ -73,6 +73,7 @@ html{font-size:160%;}html,body{height:100%;}body{background:var(--bg);color:var(
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:480px;transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.34,1.1,0.64,1);max-height:92dvh;display:flex;flex-direction:column;}
 .modal-overlay.open .modal{transform:translateY(0);}
+.modal-overlay.log-overlay{align-items:stretch;padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));}.modal.fullscreen{border-radius:0;max-height:none;height:100%;flex:1;}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
 .modal-header{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;}
 .modal-title{font-size:18px;font-weight:800;}
@@ -493,17 +494,17 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
   </div>
 </div>
 <!-- MODAL: Log -->
-<div class="modal-overlay" id="modalLog">
-  <div class="modal">
+<div class="modal-overlay log-overlay" id="modalLog">
+  <div class="modal fullscreen">
     <div class="modal-handle"></div>
     <div class="modal-header"><div class="modal-title" id="logModalTitle">Log Food</div><button class="modal-close" onclick="closeModal('modalLog')">✕</button></div>
     <div class="modal-body" style="padding-bottom:16px">
       <div id="logStepPick">
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input class="search-input" id="logSearch" placeholder="Search foods & recipes…" oninput="renderLogPicker()" style="padding-left:12px;flex:1">
+          <input class="search-input" id="logSearch" placeholder="Search foods & recipes…" oninput="renderLogPicker()" onkeydown="logSearchKeydown(event)" style="padding-left:12px;flex:1">
           <button onclick="openQuickLog()" style="background:var(--accent-dim);border:1px solid rgba(110,231,183,0.3);border-radius:var(--radius-sm);color:var(--accent);font-size:20px;font-weight:300;width:44px;flex-shrink:0;cursor:pointer;">＋</button>
         </div>
-        <div id="logPickerList" style="display:flex;flex-direction:column;gap:6px;max-height:50dvh;overflow-y:auto"></div>
+        <div id="logPickerList" style="display:flex;flex-direction:column;gap:6px;max-height:75dvh;overflow-y:auto"></div>
       </div>
       <div id="logStepQuick" style="display:none">
         <button class="log-back-btn" onclick="logBackToPick()">← Back</button>
@@ -568,9 +569,9 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
       </div>
       <div class="form-row" style="margin-bottom:14px">
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Name</label><input class="form-input" id="foodName" placeholder="e.g. Chicken Breast"></div>
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Unit</label><select class="form-input" id="foodUnit"><option value="g">g (grams)</option><option value="ml">ml (millilitres)</option></select></div>
       </div>
       <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Unit</label><select class="form-input" id="foodUnit"><option value="g">g (grams)</option><option value="ml">ml (millilitres)</option></select></div>
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Brand <span style="color:var(--muted);font-size:9px">(optional)</span></label><input class="form-input" id="foodBrand" placeholder="e.g. Lidl"></div>
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Serving size</label><input class="form-input" type="number" id="foodServing" placeholder="e.g. 150"></div>
       </div>
@@ -1453,6 +1454,19 @@ function getRecentlyLogged(limit=5){
     }
   }
   return recent.slice(0,limit);
+}
+function logSearchKeydown(e){
+  if(e.key!=='Enter') return;
+  const q=document.getElementById('logSearch').value.toLowerCase();
+  if(!q) return;
+  const foods=allFoods.filter(f=>f.name.toLowerCase().includes(q));
+  const recipes=allRecipes.filter(r=>r.name.toLowerCase().includes(q));
+  const total=foods.length+recipes.length;
+  if(total===1){
+    e.preventDefault();
+    if(foods.length===1) logSelectFood(foods[0].id);
+    else logSelectRecipe(recipes[0].id);
+  }
 }
 function renderLogPicker(){
   const q=document.getElementById('logSearch').value.toLowerCase();
