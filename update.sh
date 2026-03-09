@@ -13,6 +13,9 @@ mkdir -p www
 cp MacrosAPK.html www/index.html
 npx cap sync
 
+echo "🎨 Applying icons..."
+bash install_icons.sh
+
 echo "🔨 Building APK..."
 cd android && ./gradlew assembleDebug --quiet && cd ..
 
