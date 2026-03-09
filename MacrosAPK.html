@@ -542,7 +542,6 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
     <div class="modal-body" id="detailBody"></div>
     <div class="detail-actions">
       <button class="detail-action-edit" id="detailEditBtn">✏️ Edit</button>
-      <button class="detail-action-delete" id="detailDeleteBtn">🗑 Delete</button>
     </div>
   </div>
 </div>
@@ -594,7 +593,10 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
         <div class="form-group"><label class="form-label"><span class="form-label-dot" style="background:var(--fiber)"></span>Fiber (g)</label><input class="form-input" type="number" id="foodFiber" placeholder="0" min="0" step="0.1" oninput="updateKcal()"></div>
         <div class="form-group"><label class="form-label"><span class="form-label-dot" style="background:var(--fat)"></span>Fat (g)</label><input class="form-input" type="number" id="foodFat" placeholder="0" min="0" step="0.1" oninput="updateKcal()"></div>
       </div>
-      <button class="form-submit" onclick="saveFood()">Save Food</button>
+      <div style="display:flex;gap:8px;">
+        <button id="foodDeleteBtn" style="display:none;width:52px;min-height:100%;padding:15px 0;margin-top:6px;background:#ef4444;border:none;border-radius:var(--radius);color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="foodDeleteFromEdit()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        <button class="form-submit" style="flex:1" onclick="saveFood()">Save Food</button>
+      </div>
     </div>
   </div>
 </div>
@@ -850,7 +852,6 @@ async function showFoodDetail(id){
     </div>
     ${f.instructions?`<div class="detail-section"><div class="detail-section-title">Cooking instructions</div><div class="detail-notes">${esc(f.instructions)}</div></div>`:''}`;
   document.getElementById('detailEditBtn').onclick=()=>{closeModal('modalDetail');editFood(id);};
-  document.getElementById('detailDeleteBtn').onclick=()=>{closeModal('modalDetail');confirmDelete(id,f.name);};
   openModal('modalDetail');
 }
 
@@ -884,7 +885,6 @@ async function showRecipeDetail(id){
     <div class="detail-section"><div class="detail-section-title">Ingredients</div>${rows}</div>
     ${r.notes?`<div class="detail-section"><div class="detail-section-title">Notes</div><div class="detail-notes">${esc(r.notes)}</div></div>`:''}`;
   document.getElementById('detailEditBtn').onclick=()=>{closeModal('modalDetail');editRecipe(id);};
-  document.getElementById('detailDeleteBtn').onclick=()=>{closeModal('modalDetail');confirmDeleteRecipe(id,r.name);};
   openModal('modalDetail');
 }
 
@@ -910,6 +910,7 @@ function updateKcal(){
 function openAddFood(){
   document.getElementById('foodModalTitle').textContent='New Food';
   document.getElementById('foodEditId').value='';
+  document.getElementById('foodDeleteBtn').style.display='none';
   ['foodName','foodBrand','foodInstructions'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('foodUnit').value='g';
   document.getElementById('foodServing').value='';
@@ -923,6 +924,7 @@ async function editFood(id){
   const f=await dbGet('foods',id); if(!f) return;
   document.getElementById('foodModalTitle').textContent='Edit Food';
   document.getElementById('foodEditId').value=f.id;
+  document.getElementById('foodDeleteBtn').style.display='flex';
   document.getElementById('foodName').value=f.name;
   document.getElementById('foodBrand').value=f.brand||'';
   document.getElementById('foodUnit').value=f.unit||'g';
@@ -949,6 +951,12 @@ async function saveFood(){
   if(editId) obj.id=parseInt(editId);
   await dbPut('foods',obj); allFoods=await dbAll('foods');
   closeModal('modalFood'); renderFoods(); showToast(editId?'✓ Food updated':'✓ Food saved');
+}
+function foodDeleteFromEdit(){
+  const id=parseInt(document.getElementById('foodEditId').value);
+  const name=document.getElementById('foodName').value;
+  closeModal('modalFood');
+  confirmDelete(id,name);
 }
 function confirmDelete(id,name){
   document.getElementById('confirmText').textContent=`"${name}" will be permanently removed.`;
@@ -2496,6 +2504,23 @@ async function init(){
     }
   });
   setTimeout(applyStatusBarInset, 300);
+
+  // Handle Android back gesture — close top modal or exit app
+  if(window.Capacitor?.Plugins?.App){
+    const {App: CapApp} = window.Capacitor.Plugins;
+    CapApp.addListener('backButton', () => {
+      // Find any open modal, close the topmost one
+      const openModals = [...document.querySelectorAll('.modal-overlay.open')];
+      if(openModals.length > 0){
+        // Close the last opened one
+        openModals[openModals.length - 1].classList.remove('open');
+      } else {
+        // No modal open — exit the app
+        CapApp.exitApp();
+      }
+    });
+  }
+
   await initDB();
   allFoods=await dbAll('foods');
   allRecipes=await dbAll('recipes');
