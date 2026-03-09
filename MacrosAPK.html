@@ -508,10 +508,35 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
       </div>
       <div id="logStepQuick" style="display:none">
         <button class="log-back-btn" onclick="logBackToPick()">← Back</button>
-        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Name <span style="color:var(--muted);font-size:9px">(optional)</span></label><input class="form-input" id="quickName" placeholder="e.g. Protein bar"></div>
-        <div style="background:var(--accent-dim);border:1px solid rgba(110,231,183,0.15);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-          <div style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">Auto kcal</div>
-          <div style="font-size:22px;font-weight:800;color:var(--accent)" id="quickKcalPreview">0</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Name</label><input class="form-input" id="quickName" placeholder="e.g. Protein bar"></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Brand <span style="color:var(--muted);font-size:9px">(optional)</span></label><input class="form-input" id="quickBrand" placeholder="e.g. Lidl"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Unit</label><select class="form-input" id="quickUnit"><option value="g">g (grams)</option><option value="ml">ml (millilitres)</option></select></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Serving size</label><input class="form-input" type="number" id="quickServing" placeholder="e.g. 150"></div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Category</label><select class="form-input" id="quickCategory">
+          <option value="Meat &amp; Fish">🥩 Meat &amp; Fish</option><option value="Dairy &amp; Eggs">🧀 Dairy &amp; Eggs</option>
+          <option value="Grains &amp; Legumes">🌾 Grains &amp; Legumes</option><option value="Fruits &amp; Vegetables">🥦 Fruits &amp; Vegetables</option>
+          <option value="Nuts &amp; Seeds">🥜 Nuts &amp; Seeds</option><option value="Snacks &amp; Processed">🍪 Snacks &amp; Processed</option>
+          <option value="Drinks">🥤 Drinks</option><option value="Sauces &amp; Condiments">🫙 Sauces &amp; Condiments</option>
+        </select></div>
+        <div class="kcal-preview">
+          <div>
+            <div class="kcal-preview-label">Energy (kcal / 100<span id="quickUnitLabel">g</span>)</div>
+            <div class="kcal-formula" id="quickKcalFormula">0×4 + 0×4 + 0×2 + 0×9</div>
+            <div class="kcal-locked-badge" id="quickKcalLockedBadge" style="display:none">✎ manual override</div>
+          </div>
+          <div class="kcal-right">
+            <button class="kcal-lock-btn" id="quickKcalLockBtn" onclick="toggleQuickKcalLock()" title="Edit manually">✎</button>
+            <div style="text-align:right">
+              <input class="kcal-input locked" id="quickKcalPreview" type="number" min="0" value="0" oninput="onQuickKcalManualInput()">
+              <div class="kcal-preview-unit">kcal</div>
+            </div>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
           <div class="form-group" style="margin-bottom:0"><label class="form-label"><span style="color:var(--protein)">●</span> Protein (g)</label><input class="form-input" type="number" id="quickProtein" min="0" step="0.1" placeholder="0" oninput="updateQuickKcal()"></div>
@@ -519,7 +544,11 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
           <div class="form-group" style="margin-bottom:0"><label class="form-label"><span style="color:var(--fiber)">●</span> Fiber (g)</label><input class="form-input" type="number" id="quickFiber" min="0" step="0.1" placeholder="0" oninput="updateQuickKcal()"></div>
           <div class="form-group" style="margin-bottom:0"><label class="form-label"><span style="color:var(--fat)">●</span> Fat (g)</label><input class="form-input" type="number" id="quickFat" min="0" step="0.1" placeholder="0" oninput="updateQuickKcal()"></div>
         </div>
-        <button class="form-submit" onclick="confirmQuickLog()">Add to Log</button>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Quantity (<span id="quickQtyUnit">g</span>)</label><input class="form-input" type="number" id="quickGrams" min="0.1" step="1" placeholder="100"></div>
+        <div style="display:flex;gap:8px">
+          <button class="form-submit" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);" onclick="confirmQuickLog(false)">Log Only</button>
+          <button class="form-submit" style="flex:1" onclick="confirmQuickLog(true)">Log &amp; Save</button>
+        </div>
       </div>
       <div id="logStepGrams" style="display:none">
         <button class="log-back-btn" onclick="logBackToPick()">← Back</button>
@@ -566,13 +595,15 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
           </div>
         </div>
       </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Name</label><input class="form-input" id="foodName" placeholder="e.g. Chicken Breast"></div>
-      </div>
-      <div class="form-row" style="margin-bottom:14px">
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Unit</label><select class="form-input" id="foodUnit"><option value="g">g (grams)</option><option value="ml">ml (millilitres)</option></select></div>
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Brand <span style="color:var(--muted);font-size:9px">(optional)</span></label><input class="form-input" id="foodBrand" placeholder="e.g. Lidl"></div>
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Serving size</label><input class="form-input" type="number" id="foodServing" placeholder="e.g. 150"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">Name</label><input class="form-input" id="foodName" placeholder="e.g. Chicken Breast"></div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">Brand <span style="color:var(--muted);font-size:9px">(optional)</span></label><input class="form-input" id="foodBrand" placeholder="e.g. Lidl"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">Unit</label><select class="form-input" id="foodUnit"><option value="g">g (grams)</option><option value="ml">ml (millilitres)</option></select></div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">Serving size</label><input class="form-input" type="number" id="foodServing" placeholder="e.g. 150"></div>
+        </div>
       </div>
       <div class="form-group"><label class="form-label">Category</label>
         <select class="form-input" id="foodCategory">
@@ -1550,32 +1581,72 @@ function openQuickLog(){
   document.getElementById('logStepPick').style.display='none';
   document.getElementById('logStepGrams').style.display='none';
   document.getElementById('logStepQuick').style.display='block';
-  ['quickName','quickProtein','quickCarbs','quickFiber','quickFat'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('quickKcalPreview').textContent='0';
+  ['quickName','quickBrand','quickServing','quickProtein','quickCarbs','quickFiber','quickFat','quickGrams'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('quickUnit').value='g';
+  document.getElementById('quickCategory').value='Meat & Fish';
+  quickKcalManual=false; setQuickKcalManual(false);
+  document.getElementById('quickKcalPreview').value='0';
+  document.getElementById('quickKcalFormula').textContent='0×4 + 0×4 + 0×2 + 0×9';
+  document.getElementById('quickUnitLabel').textContent='g';
+  document.getElementById('quickQtyUnit').textContent='g';
   setTimeout(()=>document.getElementById('quickName').focus(),100);
 }
+let quickKcalManual=false;
+function setQuickKcalManual(manual){
+  quickKcalManual=manual;
+  const input=document.getElementById('quickKcalPreview'),btn=document.getElementById('quickKcalLockBtn'),badge=document.getElementById('quickKcalLockedBadge'),formula=document.getElementById('quickKcalFormula');
+  input.classList.toggle('locked',!manual);
+  input.readOnly=!manual;
+  btn.classList.toggle('active',manual);
+  badge.style.display=manual?'block':'none';
+  formula.style.display=manual?'none':'block';
+}
+function toggleQuickKcalLock(){setQuickKcalManual(!quickKcalManual);if(!quickKcalManual)updateQuickKcal();}
+function onQuickKcalManualInput(){if(!quickKcalManual)setQuickKcalManual(true);}
 function updateQuickKcal(){
   const p=parseFloat(document.getElementById('quickProtein').value)||0;
-  const c=parseFloat(document.getElementById('quickCarbs').value)||0;
+  const cv=parseFloat(document.getElementById('quickCarbs').value)||0;
   const fi=parseFloat(document.getElementById('quickFiber').value)||0;
   const f=parseFloat(document.getElementById('quickFat').value)||0;
-  document.getElementById('quickKcalPreview').textContent=calcKcal(p,c,fi,f);
+  const u=document.getElementById('quickUnit').value;
+  document.getElementById('quickUnitLabel').textContent=u;
+  document.getElementById('quickQtyUnit').textContent=u;
+  if(quickKcalManual) return;
+  const k=calcKcal(p,cv,fi,f);
+  document.getElementById('quickKcalPreview').value=k;
+  document.getElementById('quickKcalFormula').textContent=p+'×4 + '+cv+'×4 + '+fi+'×2 + '+f+'×9';
 }
-function confirmQuickLog(){
+async function confirmQuickLog(saveToLibrary){
   const p=parseFloat(document.getElementById('quickProtein').value)||0;
   const c=parseFloat(document.getElementById('quickCarbs').value)||0;
   const fi=parseFloat(document.getElementById('quickFiber').value)||0;
   const f=parseFloat(document.getElementById('quickFat').value)||0;
   if(!p&&!c&&!fi&&!f){showToast('⚠️ Enter at least one macro');return;}
   const name=document.getElementById('quickName').value.trim()||'Quick entry';
-  const k=calcKcal(p,c,fi,f);
+  const brand=document.getElementById('quickBrand').value.trim();
+  const unit=document.getElementById('quickUnit').value;
+  const serving=parseFloat(document.getElementById('quickServing').value)||null;
+  const category=document.getElementById('quickCategory').value;
+  const grams=parseFloat(document.getElementById('quickGrams').value)||100;
+  const k=quickKcalManual?(parseFloat(document.getElementById('quickKcalPreview').value)||0):calcKcal(p,c,fi,f);
+  const ratio=grams/100;
   const log=loadLog(selectedDate);
   if(!log[logCurrentMeal]) log[logCurrentMeal]=[];
-  log[logCurrentMeal].push({type:'quick',name,p,c,fi,f,k,grams:100});
+  log[logCurrentMeal].push({type:'quick',name,p:Math.round(p*ratio*10)/10,c:Math.round(c*ratio*10)/10,fi:Math.round(fi*ratio*10)/10,f:Math.round(f*ratio*10)/10,k:Math.round(k*ratio),grams});
   saveLog(selectedDate,log);
+  if(saveToLibrary){
+    const dup=allFoods.find(x=>x.name.toLowerCase()===name.toLowerCase());
+    if(dup){showToast('⚠️ Food "'+name+'" already exists in library');}
+    else{
+      await dbPut('foods',{name,brand,unit,serving,category,protein:p,carbs:c,fiber:fi,fat:f,kcal:k,kcalManual:quickKcalManual,instructions:''});
+      allFoods=await dbAll('foods');
+      showToast('✓ Logged & saved to library');
+    }
+  } else {
+    showToast('✓ Added to '+MEALS.find(m=>m.id===logCurrentMeal).name);
+  }
   closeModal('modalLog');
   renderToday();
-  showToast('✓ Added to '+MEALS.find(m=>m.id===logCurrentMeal).name);
 }
 
 // ── DAY TYPE (TRAINING / REST) ────────────────────────────────────────────────
