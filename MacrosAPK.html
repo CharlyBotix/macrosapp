@@ -553,7 +553,9 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
       <div id="logStepGrams" style="display:none">
         <button class="log-back-btn" onclick="logBackToPick()">← Back</button>
         <div class="log-selected-card" id="logSelectedCard"></div>
-        <div class="form-group" style="margin-bottom:8px"><label class="form-label">Quantity (g)</label><input class="form-input" type="number" id="logGrams" min="0.1" step="1" placeholder="100" oninput="updateLogPreview()"></div>
+        <div class="form-group" style="margin-bottom:4px"><label class="form-label">Quantity (g)</label><input class="form-input" type="number" id="logGrams" min="0.1" step="1" placeholder="100" oninput="updateLogPreview()"></div>
+        <div id="logServingHint" style="display:none;margin-bottom:4px;font-size:12px;color:var(--muted);font-family:var(--font-mono)"></div>
+        <div id="logServingCount" style="display:none;margin-bottom:10px;font-size:12px;color:var(--accent);font-family:var(--font-mono)"></div>
         <div class="log-preview" id="logPreview"></div>
         <button class="form-submit" style="margin-top:12px" onclick="confirmLogEntry()">Add to Log</button>
       </div>
@@ -642,16 +644,24 @@ span[id^="toggle"]::before{content:'';position:absolute;height:18px;width:18px;l
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Recipe name</label><input class="form-input" id="recipeName" placeholder="e.g. Overnight Oats"></div>
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Servings</label><input class="form-input" type="number" id="recipeServings" placeholder="1" min="1" step="1" value="1" oninput="updateRecipeSummary()"></div>
       </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Total weight (g) <span style="color:var(--muted);font-size:9px">auto</span></label><input class="form-input" type="number" id="recipeTotalWeight" placeholder="auto" min="1" step="1" oninput="updateRecipeSummary()"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Serving weight (g)</label><input class="form-input" type="number" id="recipeServingWeight" placeholder="auto" min="1" step="1" readonly style="color:var(--muted)"></div>
+      </div>
       <div class="form-group"><label class="form-label">Notes <span style="color:var(--muted);font-size:9px">(optional)</span></label><textarea class="form-input" id="recipeNotes" placeholder="e.g. Cook at 180°C for 25 min…" rows="3" style="resize:none;line-height:1.5"></textarea></div>
       <div class="recipe-macro-summary">
         <div class="recipe-macro-row"><div class="recipe-macro-label">Total</div><div class="recipe-macro-vals"><span class="m-k" id="rTotKcal">0 kcal</span><span class="m-p" id="rTotP">0g P</span><span class="m-c" id="rTotC">0g C</span><span class="m-fi" id="rTotFi">0g Fi</span><span class="m-f" id="rTotF">0g F</span></div></div>
+        <div class="recipe-macro-row"><div class="recipe-macro-label">Per 100g</div><div class="recipe-macro-vals"><span class="m-k" id="rP100Kcal">0 kcal</span><span class="m-p" id="rP100P">0g P</span><span class="m-c" id="rP100C">0g C</span><span class="m-fi" id="rP100Fi">0g Fi</span><span class="m-f" id="rP100F">0g F</span></div></div>
         <div class="recipe-macro-row"><div class="recipe-macro-label">Per serving</div><div class="recipe-macro-vals"><span class="m-k" id="rSrvKcal">0 kcal</span><span class="m-p" id="rSrvP">0g P</span><span class="m-c" id="rSrvC">0g C</span><span class="m-fi" id="rSrvFi">0g Fi</span><span class="m-f" id="rSrvF">0g F</span></div></div>
       </div>
       <div class="form-section-title">Ingredients</div>
       <div class="ingredient-list" id="ingredientList"></div>
       <button class="add-ingredient-btn" onclick="openIngredientPicker()">＋ Add Ingredient</button>
       <div style="height:16px"></div>
-      <button class="form-submit" onclick="saveRecipe()">Save Recipe</button>
+      <div style="display:flex;gap:8px;">
+        <button id="recipeDeleteBtn" style="display:none;width:52px;padding:15px 0;margin-top:6px;background:#ef4444;border:none;border-radius:var(--radius);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;" onclick="recipeDeleteFromEdit()"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        <button class="form-submit" style="flex:1" onclick="saveRecipe()">Save Recipe</button>
+      </div>
     </div>
   </div>
 </div>
@@ -892,7 +902,7 @@ async function showRecipeDetail(id){
   const t=recipeCalcTotals(r.ingredients||[]);
   const srv=Math.max(1,r.servings||1);
   document.getElementById('detailTitle').textContent=r.name;
-  document.getElementById('detailSubtitle').textContent=`${srv} serving${srv!==1?'s':''} · ${(r.ingredients||[]).length} ingredients`;
+  const totalW=r.totalWeight||t.totalIngW||100;const p100=recipePer100(t,totalW);const srvW=Math.round(totalW/srv);document.getElementById('detailSubtitle').textContent=`${srv} serving${srv!==1?'s':''} · ${srvW}g each · ${(r.ingredients||[]).length} ingredients`;
   const rows=(r.ingredients||[]).map(ing=>{
     const food=allFoods.find(x=>x.id===ing.foodId); if(!food) return '';
     const ratio=ing.weight/100;
@@ -906,7 +916,7 @@ async function showRecipeDetail(id){
       </div></div>`;
   }).join('');
   document.getElementById('detailBody').innerHTML=`
-    <div class="detail-kcal-hero"><div class="detail-kcal-num">${Math.round(t.k/srv)}</div><div class="detail-kcal-label">kcal per serving · ${Math.round(t.k)} total</div></div>
+    <div class="detail-kcal-hero"><div class="detail-kcal-num">${Math.round(p100.k)}</div><div class="detail-kcal-label">kcal per 100g · ${Math.round(t.k)} total · ${Math.round(t.k/srv)}/serving</div></div>
     <div class="detail-macro-grid">
       <div class="detail-macro-box"><div class="detail-macro-val m-p">${Math.round(t.p/srv)}g</div><div class="detail-macro-label">Protein / srv</div></div>
       <div class="detail-macro-box"><div class="detail-macro-val m-c">${Math.round(t.c/srv)}g</div><div class="detail-macro-label">Carbs / srv</div></div>
@@ -983,6 +993,12 @@ async function saveFood(){
   await dbPut('foods',obj); allFoods=await dbAll('foods');
   closeModal('modalFood'); renderFoods(); showToast(editId?'✓ Food updated':'✓ Food saved');
 }
+function recipeDeleteFromEdit(){
+  const id=parseInt(document.getElementById('recipeEditId').value);
+  const name=document.getElementById('recipeName').value;
+  closeModal('modalRecipe');
+  confirmDeleteRecipe(id,name);
+}
 function foodDeleteFromEdit(){
   const id=parseInt(document.getElementById('foodEditId').value);
   const name=document.getElementById('foodName').value;
@@ -998,23 +1014,43 @@ function confirmDelete(id,name){
 // ── RECIPES ───────────────────────────────────────────────────────────────────
 let recipeIngredients=[];
 function recipeCalcTotals(ingredients){
-  let k=0,p=0,c=0,fi=0,f=0;
+  let k=0,p=0,c=0,fi=0,f=0,totalIngW=0;
   for(const ing of ingredients){
     const food=allFoods.find(x=>x.id===ing.foodId); if(!food) continue;
     const r=ing.weight/100;
     k+=(food.kcal||calcKcal(food.protein||0,food.carbs||0,food.fiber||0,food.fat||0))*r;
     p+=(food.protein||0)*r; c+=(food.carbs||0)*r; fi+=(food.fiber||0)*r; f+=(food.fat||0)*r;
+    totalIngW+=ing.weight;
   }
-  return{k,p,c,fi,f};
+  return{k,p,c,fi,f,totalIngW};
+}
+// Returns per-100g macros for a recipe given its total weight
+function recipePer100(t, totalW){
+  if(!totalW) return{k:0,p:0,c:0,fi:0,f:0};
+  const r=100/totalW;
+  return{k:t.k*r, p:t.p*r, c:t.c*r, fi:t.fi*r, f:t.f*r};
 }
 function updateRecipeSummary(){
   const srv=Math.max(1,parseInt(document.getElementById('recipeServings').value)||1);
   const t=recipeCalcTotals(recipeIngredients);
+  // Total weight: use manual override if set, else auto from ingredients
+  const autoW=Math.round(t.totalIngW);
+  const manualW=parseFloat(document.getElementById('recipeTotalWeight').value)||0;
+  const totalW=manualW||autoW;
+  if(!manualW) document.getElementById('recipeTotalWeight').placeholder=autoW||'auto';
+  const servingW=totalW?Math.round(totalW/srv):0;
+  document.getElementById('recipeServingWeight').value=servingW||'';
+  const p100=recipePer100(t,totalW);
   document.getElementById('rTotKcal').textContent=Math.round(t.k)+' kcal';
   document.getElementById('rTotP').textContent=Math.round(t.p)+'g P';
   document.getElementById('rTotC').textContent=Math.round(t.c)+'g C';
   document.getElementById('rTotFi').textContent=Math.round(t.fi)+'g Fi';
   document.getElementById('rTotF').textContent=Math.round(t.f)+'g F';
+  document.getElementById('rP100Kcal').textContent=Math.round(p100.k)+' kcal';
+  document.getElementById('rP100P').textContent=Math.round(p100.p*10)/10+'g P';
+  document.getElementById('rP100C').textContent=Math.round(p100.c*10)/10+'g C';
+  document.getElementById('rP100Fi').textContent=Math.round(p100.fi*10)/10+'g Fi';
+  document.getElementById('rP100F').textContent=Math.round(p100.f*10)/10+'g F';
   document.getElementById('rSrvKcal').textContent=Math.round(t.k/srv)+' kcal';
   document.getElementById('rSrvP').textContent=Math.round(t.p/srv)+'g P';
   document.getElementById('rSrvC').textContent=Math.round(t.c/srv)+'g C';
@@ -1041,7 +1077,10 @@ function openAddRecipe(){
   document.getElementById('recipeEditId').value='';
   document.getElementById('recipeName').value='';
   document.getElementById('recipeServings').value='1';
+  document.getElementById('recipeTotalWeight').value='';
+  document.getElementById('recipeServingWeight').value='';
   document.getElementById('recipeNotes').value='';
+  document.getElementById('recipeDeleteBtn').style.display='none';
   recipeIngredients=[]; renderIngredientList(); openModal('modalRecipe');
   setTimeout(()=>document.getElementById('recipeName').focus(),350);
 }
@@ -1051,7 +1090,9 @@ async function editRecipe(id){
   document.getElementById('recipeEditId').value=r.id;
   document.getElementById('recipeName').value=r.name;
   document.getElementById('recipeServings').value=r.servings||1;
+  document.getElementById('recipeTotalWeight').value=r.totalWeight||'';
   document.getElementById('recipeNotes').value=r.notes||'';
+  document.getElementById('recipeDeleteBtn').style.display='flex';
   recipeIngredients=[...(r.ingredients||[])];
   renderIngredientList(); openModal('modalRecipe');
 }
@@ -1063,7 +1104,10 @@ async function saveRecipe(){
   const dup=allRecipes.find(r=>r.name.toLowerCase()===name.toLowerCase()&&(!editId||r.id!==parseInt(editId)));
   if(dup){showToast('⚠️ A recipe with that name already exists');return;}
   const srv=Math.max(1,parseInt(document.getElementById('recipeServings').value)||1);
-  const obj={name,servings:srv,notes:document.getElementById('recipeNotes').value.trim(),ingredients:recipeIngredients.map(i=>({...i}))};
+  const t=recipeCalcTotals(recipeIngredients);
+  const manualW=parseFloat(document.getElementById('recipeTotalWeight').value)||0;
+  const totalWeight=manualW||Math.round(t.totalIngW)||null;
+  const obj={name,servings:srv,totalWeight,notes:document.getElementById('recipeNotes').value.trim(),ingredients:recipeIngredients.map(i=>({...i}))};
   if(editId) obj.id=parseInt(editId);
   await dbPut('recipes',obj); allRecipes=await dbAll('recipes');
   closeModal('modalRecipe'); renderRecipes(); showToast(editId?'✓ Recipe updated':'✓ Recipe saved');
@@ -1077,7 +1121,10 @@ async function renderRecipes(){
   if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">${allRecipes.length===0?'No recipes yet':'Nothing found'}</div><div class="empty-state-sub">${allRecipes.length===0?'Tap ＋ New to create your first recipe.':'Try a different search.'}</div></div>`;return;}
   el.innerHTML=list.map(r=>{
     const t=recipeCalcTotals(r.ingredients||[]);
+    const totalW=r.totalWeight||t.totalIngW||100;
+    const p100=recipePer100(t,totalW);
     const srv=Math.max(1,r.servings||1);
+    const srvW=Math.round(totalW/srv);
     return `<div class="recipe-card" onclick="showRecipeDetail(${r.id})">
       <div class="recipe-card-icon">📋</div>
       <div class="recipe-card-body">
@@ -1209,7 +1256,9 @@ function calcLogEntryMacros(entry){
   } else {
     const rec=allRecipes.find(x=>x.id===entry.id); if(!rec) return{k:0,p:0,c:0,fi:0,f:0};
     const t=recipeCalcTotals(rec.ingredients||[]);
-    return{k:Math.round(t.k*r),p:Math.round(t.p*r),c:Math.round(t.c*r),fi:Math.round(t.fi*r),f:Math.round(t.f*r)};
+    const totalW=rec.totalWeight||t.totalIngW||100;
+    const p100=recipePer100(t,totalW);
+    return{k:Math.round(p100.k*r),p:Math.round(p100.p*r),c:Math.round(p100.c*r),fi:Math.round(p100.fi*r),f:Math.round(p100.f*r)};
   }
 }
 
@@ -1310,7 +1359,7 @@ function openEditLogEntry(mealId, idx){
     const r=allRecipes.find(x=>x.id===entry.id);
     if(!r){editLogItem={type:'unknown',name:'Unknown item'};editLogMeal=mealId;editLogIdx=idx;document.getElementById('editLogCard').innerHTML='<div class="log-selected-name" style="color:var(--muted)">Unknown item (deleted from library)</div>';document.getElementById('editLogGrams').value='';document.getElementById('editLogPreview').innerHTML='';openModal('modalEditLog');return;}
     const t=recipeCalcTotals(r.ingredients||[]);
-    editLogItem={type:'recipe',id:entry.id,name:r.name,per100k:t.k,per100p:t.p,per100c:t.c,per100fi:t.fi,per100f:t.f};
+    const totalW2=r.totalWeight||t.totalIngW||100;const p100e=recipePer100(t,totalW2);editLogItem={type:'recipe',id:entry.id,name:r.name,per100k:p100e.k,per100p:p100e.p,per100c:p100e.c,per100fi:p100e.fi,per100f:p100e.f};
   }
   document.getElementById('editLogCard').innerHTML=`<div class="log-selected-name">${esc(editLogItem.name)}</div><div class="log-selected-meta">${Math.round(editLogItem.per100k)} kcal · ${Math.round(editLogItem.per100p)}g P · ${Math.round(editLogItem.per100c)}g C · ${Math.round(editLogItem.per100fi)}g Fi · ${Math.round(editLogItem.per100f)}g F — per 100g</div>`;
   document.getElementById('editLogGrams').value=entry.grams;
@@ -1515,13 +1564,13 @@ function renderLogPicker(){
     const recent=getRecentlyLogged();
     const recentHtml=recent.length?`<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-family:var(--font-mono);margin-bottom:6px;margin-top:2px">Recent</div>`+recent.map(entry=>{
       if(entry.type==='food'){const f=allFoods.find(x=>x.id===entry.id);if(!f)return '';const kcal=f.kcal||calcKcal(f.protein||0,f.carbs||0,f.fiber||0,f.fat||0);return `<div class="log-picker-item" style="border-color:rgba(110,231,183,0.2)" onclick="logSelectFood(${f.id})"><div class="log-picker-name">${esc(f.name)}${f.brand?` <span style='color:var(--muted);font-weight:400'>${esc(f.brand)}</span>`:''}</div><div class="log-picker-meta">Recent · ${kcal} kcal / 100g</div></div>`;}
-      const r=allRecipes.find(x=>x.id===entry.id);if(!r)return '';const t=recipeCalcTotals(r.ingredients||[]);const srv=Math.max(1,r.servings||1);return `<div class="log-picker-item" style="border-color:rgba(110,231,183,0.2)" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">Recent · ${Math.round(t.k/srv)} kcal/srv</div></div>`;
+      const r=allRecipes.find(x=>x.id===entry.id);if(!r)return '';const t=recipeCalcTotals(r.ingredients||[]);const totalW=r.totalWeight||t.totalIngW||100;const p100=recipePer100(t,totalW);const srv=Math.max(1,r.servings||1);const srvW=Math.round(totalW/srv);return `<div class="log-picker-item" style="border-color:rgba(110,231,183,0.2)" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">Recent · ${Math.round(p100.k)} kcal/100g · serving: ${srvW}g</div></div>`;
     }).join('')+`<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-family:var(--font-mono);margin-bottom:6px;margin-top:12px">All</div>`:'';
     const foods=allFoods; const recipes=allRecipes;
     if(!foods.length&&!recipes.length&&!recent.length){list.innerHTML=`<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px">Nothing found.</div>`;return;}
     list.innerHTML=recentHtml+[
       ...foods.map(f=>{const kcal=f.kcal||calcKcal(f.protein||0,f.carbs||0,f.fiber||0,f.fat||0);return `<div class="log-picker-item" onclick="logSelectFood(${f.id})"><div class="log-picker-name">${esc(f.name)}${f.brand?` <span style='color:var(--muted);font-weight:400'>${esc(f.brand)}</span>`:''}</div><div class="log-picker-meta">${f.category||''} · ${kcal} kcal / 100g</div></div>`;}),
-      ...recipes.map(r=>{const t=recipeCalcTotals(r.ingredients||[]);const srv=Math.max(1,r.servings||1);return `<div class="log-picker-item" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">${Math.round(t.k/srv)} kcal/serving · ${Math.round(t.k)} kcal total</div></div>`;})
+      ...recipes.map(r=>{const t=recipeCalcTotals(r.ingredients||[]);const totalW=r.totalWeight||t.totalIngW||100;const p100=recipePer100(t,totalW);const srv=Math.max(1,r.servings||1);const srvW=Math.round(totalW/srv);return `<div class="log-picker-item" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">${Math.round(p100.k)} kcal/100g · serving: ${srvW}g</div></div>`;})
     ].join('');
     return;
   }
@@ -1530,7 +1579,7 @@ function renderLogPicker(){
   if(!foods.length&&!recipes.length){list.innerHTML=`<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px">Nothing found.</div>`;return;}
   list.innerHTML=[
     ...foods.map(f=>{const kcal=f.kcal||calcKcal(f.protein||0,f.carbs||0,f.fiber||0,f.fat||0);return `<div class="log-picker-item" onclick="logSelectFood(${f.id})"><div class="log-picker-name">${esc(f.name)}${f.brand?` <span style='color:var(--muted);font-weight:400'>${esc(f.brand)}</span>`:''}</div><div class="log-picker-meta">${f.category||''} · ${kcal} kcal / 100g</div></div>`;}),
-    ...recipes.map(r=>{const t=recipeCalcTotals(r.ingredients||[]);const srv=Math.max(1,r.servings||1);return `<div class="log-picker-item" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">${Math.round(t.k/srv)} kcal/serving · ${Math.round(t.k)} kcal total</div></div>`;})
+    ...recipes.map(r=>{const t=recipeCalcTotals(r.ingredients||[]);const totalW=r.totalWeight||t.totalIngW||100;const p100=recipePer100(t,totalW);const srv=Math.max(1,r.servings||1);const srvW=Math.round(totalW/srv);return `<div class="log-picker-item" onclick="logSelectRecipe(${r.id})"><div class="log-picker-name">📋 ${esc(r.name)}</div><div class="log-picker-meta">${Math.round(p100.k)} kcal/100g · serving: ${srvW}g</div></div>`;})
   ].join('');
 }
 function logSelectFood(id){
@@ -1542,7 +1591,10 @@ function logSelectFood(id){
 function logSelectRecipe(id){
   const r=allRecipes.find(x=>x.id===id); if(!r) return;
   const t=recipeCalcTotals(r.ingredients||[]);
-  logSelectedItem={type:'recipe',id,name:r.name,per100k:t.k,per100p:t.p,per100c:t.c,per100fi:t.fi,per100f:t.f,serving:null,unit:'g'};
+  const totalW=r.totalWeight||t.totalIngW||100;
+  const p100=recipePer100(t,totalW);
+  const servingW=r.servings?Math.round(totalW/r.servings):null;
+  logSelectedItem={type:'recipe',id,name:r.name,per100k:p100.k,per100p:p100.p,per100c:p100.c,per100fi:p100.fi,per100f:p100.f,serving:servingW,unit:'g',totalW};
   showLogGramsStep();
 }
 function showLogGramsStep(){
@@ -1556,6 +1608,17 @@ function showLogGramsStep(){
   if(label) label.textContent=`Quantity (${unit})`;
   const gi=document.getElementById('logGrams');
   gi.value=defaultGrams;
+  // Show serving hint
+  const hint=document.getElementById('logServingHint');
+  const scount=document.getElementById('logServingCount');
+  if(logSelectedItem.serving){
+    hint.style.display='block';
+    hint.textContent=`1 serving = ${logSelectedItem.serving}${unit}`;
+    scount.style.display='block';
+  } else {
+    hint.style.display='none';
+    scount.style.display='none';
+  }
   updateLogPreview();
   setTimeout(()=>gi.focus(),100);
 }
@@ -1564,6 +1627,12 @@ function updateLogPreview(){
   const g=parseFloat(document.getElementById('logGrams').value)||0; const r=g/100;
   if(!logSelectedItem||!g){document.getElementById('logPreview').innerHTML='';return;}
   document.getElementById('logPreview').innerHTML=`<span class="m-k">${Math.round(logSelectedItem.per100k*r)} kcal</span><span class="m-p">${Math.round(logSelectedItem.per100p*r)}g P</span><span class="m-c">${Math.round(logSelectedItem.per100c*r)}g C</span><span class="m-fi">${Math.round(logSelectedItem.per100fi*r)}g Fi</span><span class="m-f">${Math.round(logSelectedItem.per100f*r)}g F</span>`;
+  // Update serving count if applicable
+  const scount=document.getElementById('logServingCount');
+  if(logSelectedItem.serving&&g){
+    const servings=Math.round((g/logSelectedItem.serving)*10)/10;
+    scount.textContent=`= ${servings} serving${servings!==1?'s':''}`;
+  }
 }
 function confirmLogEntry(){
   const grams=parseFloat(document.getElementById('logGrams').value)||0;
