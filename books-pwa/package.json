@@ -1,0 +1,19 @@
+{
+  "name": "books-pwa",
+  "version": "1.0.0",
+  "description": "Self-hosted reading tracker PWA (Goodreads/OpenReads-like), SQLite-backed",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite src/server.js",
+    "dev": "node --experimental-sqlite --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.0.0",
+    "csv-parse": "^5.5.6"
+  }
+}

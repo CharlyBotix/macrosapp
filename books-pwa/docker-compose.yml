@@ -1,0 +1,24 @@
+services:
+  books:
+    build: .
+    image: books-pwa:local
+    container_name: books
+    restart: unless-stopped
+    environment:
+      - PORT=${PORT:-3000}
+      - DB_PATH=/data/books.db
+      - TZ=${TZ:-Europe/Paris}
+    volumes:
+      - /mnt/data/books:/data
+    networks:
+      - proxy
+    # Uncomment if you want to hit the app directly from the Pi's LAN while
+    # testing, bypassing the Cloudflare Tunnel. Not needed in production
+    # since cloudflared reaches the container over the shared "proxy" network.
+    # ports:
+    #   - "3000:3000"
+
+networks:
+  proxy:
+    external: true
+    name: ${DOCKER_NETWORK:-proxy}

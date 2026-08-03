@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Books</title>
+<meta name="theme-color" content="#2d5f4c" />
+<meta name="description" content="Suivi de lecture auto-hébergé" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Books" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <h1>📚 Books</h1>
+</header>
+
+<main id="views">
+
+  <!-- LIBRARY -->
+  <section id="view-library" class="view">
+    <div class="toolbar">
+      <input id="search-input" type="search" placeholder="Titre ou auteur..." />
+      <select id="tag-filter"><option value="">Tous les tags</option></select>
+      <select id="sort-select">
+        <option value="recent">Récemment modifié</option>
+        <option value="title">Titre</option>
+        <option value="author">Auteur</option>
+        <option value="date_finished">Date de fin</option>
+        <option value="rating">Note</option>
+      </select>
+    </div>
+    <div class="status-tabs" id="status-tabs">
+      <button class="status-tab active" data-status="">Tous</button>
+      <button class="status-tab" data-status="to_read">À lire</button>
+      <button class="status-tab" data-status="reading">En cours</button>
+      <button class="status-tab" data-status="finished">Terminé</button>
+      <button class="status-tab" data-status="abandoned">Abandonné</button>
+    </div>
+    <div id="book-list" class="book-list"></div>
+    <p id="empty-state" class="empty-state hidden">Aucun livre ici pour le moment.</p>
+  </section>
+
+  <!-- ADD / EDIT -->
+  <section id="view-add" class="view hidden">
+    <h2 id="add-title">Ajouter un livre</h2>
+
+    <div class="ol-search">
+      <input id="ol-search-input" type="search" placeholder="Rechercher sur Open Library..." />
+      <button id="ol-search-btn" type="button">Rechercher</button>
+    </div>
+    <div id="ol-results" class="ol-results"></div>
+
+    <form id="book-form">
+      <input type="hidden" id="book-id" />
+      <input type="hidden" id="open-library-id" />
+
+      <label>Titre *<input id="f-title" required /></label>
+      <label>Auteur<input id="f-author" /></label>
+
+      <div class="row">
+        <label>ISBN<input id="f-isbn" /></label>
+        <label>Pages<input id="f-pages" type="number" min="0" /></label>
+      </div>
+
+      <label>Couverture (URL)<input id="f-cover" type="url" /></label>
+      <img id="cover-preview" class="cover-preview hidden" alt="Couverture" />
+
+      <label>Statut
+        <select id="f-status">
+          <option value="to_read">À lire</option>
+          <option value="reading">En cours</option>
+          <option value="finished">Terminé</option>
+          <option value="abandoned">Abandonné</option>
+        </select>
+      </label>
+
+      <label>Note
+        <div class="stars" id="f-rating" data-value="0">
+          <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+        </div>
+      </label>
+
+      <div class="row">
+        <label>Date de début<input id="f-date-started" type="date" /></label>
+        <label>Date de fin<input id="f-date-finished" type="date" /></label>
+      </div>
+
+      <label>Tags (séparés par des virgules)
+        <input id="f-tags" list="tag-suggestions" placeholder="fantasy, français, relecture" />
+        <datalist id="tag-suggestions"></datalist>
+      </label>
+
+      <label>Notes<textarea id="f-notes" rows="4"></textarea></label>
+
+      <div class="form-actions">
+        <button type="submit" id="save-btn">Enregistrer</button>
+        <button type="button" id="delete-btn" class="danger hidden">Supprimer</button>
+        <button type="button" id="cancel-btn">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- STATS -->
+  <section id="view-stats" class="view hidden">
+    <h2>Statistiques</h2>
+    <div id="stats-content" class="stats-content"></div>
+  </section>
+
+  <!-- IMPORT -->
+  <section id="view-import" class="view hidden">
+    <h2>Importer un CSV</h2>
+    <p class="hint">Compatible avec les exports OpenReads / Goodreads (colonnes : Title, Author, ISBN, Exclusive Shelf, My Rating, Date Read, Bookshelves, etc.)</p>
+    <form id="import-form">
+      <input type="file" id="import-file" accept=".csv,text/csv" required />
+      <label class="checkbox"><input type="checkbox" id="import-skip-existing" checked /> Ignorer les doublons (ISBN ou titre+auteur déjà présents)</label>
+      <button type="submit">Importer</button>
+    </form>
+    <div id="import-result" class="import-result hidden"></div>
+  </section>
+
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-view="library">📖<span>Bibliothèque</span></button>
+  <button class="nav-btn" data-view="add">➕<span>Ajouter</span></button>
+  <button class="nav-btn" data-view="stats">📊<span>Stats</span></button>
+  <button class="nav-btn" data-view="import">⬆️<span>Import</span></button>
+</nav>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
