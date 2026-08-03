@@ -23,3 +23,7 @@ www/
 .DS_Store
 *.log
 Thumbs.db
+
+# books-tracker: local SQLite data (real data lives on the Pi's bind mount)
+books-tracker/data/*.db
+books-tracker/data/*.db-*

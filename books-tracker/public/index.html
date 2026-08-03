@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e293b" />
+  <title>Books</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Books" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>📚 Books</h1>
+    <nav class="tabs" id="main-tabs">
+      <button class="tab-btn active" data-view="library">Bibliothèque</button>
+      <button class="tab-btn" data-view="stats">Statistiques</button>
+      <button class="tab-btn" data-view="import">Import</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <!-- Library view -->
+    <section id="view-library" class="view active">
+      <div class="filter-bar">
+        <div class="status-filters" id="status-filters">
+          <button class="chip active" data-status="">Tous</button>
+          <button class="chip" data-status="to_read">À lire</button>
+          <button class="chip" data-status="reading">En cours</button>
+          <button class="chip" data-status="finished">Terminé</button>
+          <button class="chip" data-status="abandoned">Abandonné</button>
+        </div>
+        <div class="search-row">
+          <input type="search" id="search-input" placeholder="Rechercher un titre ou un auteur..." />
+          <select id="tag-filter"><option value="">Tous les tags</option></select>
+          <select id="sort-select">
+            <option value="recent">Récemment modifié</option>
+            <option value="title">Titre</option>
+            <option value="author">Auteur</option>
+            <option value="finish_date">Date de fin</option>
+            <option value="rating">Note</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="book-grid" class="book-grid"></div>
+      <p id="empty-state" class="empty-state hidden">Aucun livre. Ajoutez-en un avec le bouton +.</p>
+    </section>
+
+    <!-- Stats view -->
+    <section id="view-stats" class="view">
+      <div id="stats-content"></div>
+    </section>
+
+    <!-- Import view -->
+    <section id="view-import" class="view">
+      <div class="import-card">
+        <h2>Importer un CSV (OpenReads / export compatible)</h2>
+        <p class="muted">
+          Le fichier doit contenir une colonne "titre". Les colonnes auteur, statut,
+          note, dates, pages et tags sont détectées automatiquement si présentes.
+        </p>
+        <form id="import-form">
+          <input type="file" id="import-file" accept=".csv,text/csv" required />
+          <button type="submit" class="btn-primary">Importer</button>
+        </form>
+        <div id="import-result"></div>
+      </div>
+    </section>
+  </main>
+
+  <button id="fab-add" class="fab" aria-label="Ajouter un livre">+</button>
+
+  <!-- Add/Edit book modal -->
+  <div id="book-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Ajouter un livre</h2>
+        <button class="icon-btn" id="modal-close" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="modal-tabs" id="modal-tabs">
+        <button class="tab-btn active" data-modaltab="search">Rechercher (Open Library)</button>
+        <button class="tab-btn" data-modaltab="manual">Détails</button>
+      </div>
+
+      <div class="modal-tab-content active" id="modaltab-search">
+        <div class="search-row">
+          <input type="text" id="ol-search-input" placeholder="Titre, auteur..." />
+          <button id="ol-search-btn" class="btn-secondary">Rechercher</button>
+        </div>
+        <div id="ol-results" class="ol-results"></div>
+      </div>
+
+      <div class="modal-tab-content" id="modaltab-manual">
+        <form id="book-form">
+          <input type="hidden" id="book-id" />
+          <label>Couverture (URL)
+            <div class="cover-row">
+              <img id="form-cover-preview" src="" alt="" class="cover-preview hidden" />
+              <input type="text" id="form-cover_url" placeholder="https://..." />
+            </div>
+          </label>
+          <label>Titre *
+            <input type="text" id="form-title" required />
+          </label>
+          <label>Auteur
+            <input type="text" id="form-author" />
+          </label>
+          <div class="form-row">
+            <label>ISBN
+              <input type="text" id="form-isbn" />
+            </label>
+            <label>Pages
+              <input type="number" id="form-pages" min="0" />
+            </label>
+          </div>
+          <label>Statut
+            <select id="form-status">
+              <option value="to_read">À lire</option>
+              <option value="reading">En cours</option>
+              <option value="finished">Terminé</option>
+              <option value="abandoned">Abandonné</option>
+            </select>
+          </label>
+          <label>Note
+            <div class="star-picker" id="star-picker" data-value="0">
+              <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+            </div>
+          </label>
+          <div class="form-row">
+            <label>Début de lecture
+              <input type="date" id="form-start_date" />
+            </label>
+            <label>Fin de lecture
+              <input type="date" id="form-finish_date" />
+            </label>
+          </div>
+          <label>Tags (séparés par des virgules)
+            <input type="text" id="form-tags" placeholder="fantasy, jeunesse, prêté" />
+          </label>
+          <label>Notes / avis
+            <textarea id="form-notes" rows="4"></textarea>
+          </label>
+          <input type="hidden" id="form-olid" />
+
+          <div class="modal-actions">
+            <button type="button" id="btn-delete" class="btn-danger hidden">Supprimer</button>
+            <div class="spacer"></div>
+            <button type="button" id="btn-cancel" class="btn-secondary">Annuler</button>
+            <button type="submit" class="btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+services:
+  books:
+    build: .
+    container_name: books
+    restart: unless-stopped
+    environment:
+      - PORT=3300
+      - DATA_DIR=/app/data
+      - TZ=Europe/Paris
+    volumes:
+      - /mnt/data/books:/app/data
+    networks:
+      - cloudflared_net
+    # Optional: only useful for testing directly from the Pi's LAN without
+    # going through the Cloudflare Tunnel. Cloudflared reaches the container
+    # over `cloudflared_net` using the hostname "books:3300", so this can be
+    # removed once the tunnel route is confirmed working.
+    ports:
+      - "127.0.0.1:3300:3300"
+
+networks:
+  cloudflared_net:
+    # This must be the SAME external network your cloudflared and
+    # nginx-proxy-manager containers already use, so the tunnel can reach
+    # this container by its service name. Check your existing compose file
+    # for the actual network name (e.g. `docker network ls`) and replace
+    # the name below if it differs.
+    external: true
+    name: cloudflared_net
